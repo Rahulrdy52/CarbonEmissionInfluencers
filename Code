@@ -1,0 +1,43 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, highlight=FALSE, comment=NA)
+
+library(ggplot2)
+library(tidyverse)
+library(car)
+library(ggpubr)
+library(knitr)
+library(kableExtra)
+climate<-read.csv("/Users/rahulmreddy/Downloads/Rfiles/climatechange.csv")
+climate
+
+income<-NULL
+income_group<-function(x){
+  if(x<60000){income<-c(income,"<60000$")}
+  else{income<-c(income,">60000$")}
+}
+
+Resilience<-sapply(climate$income,income_group)
+combined_data<-cbind(climate,Resilience)
+combined_data
+
+gpr<-NULL
+rank_group<-function(x){
+  if(x<26){gpr<-c(gpr,"Top25")}
+  else{gpr<-c(gpr,"Bottom25")}
+}
+
+pt2<-sapply(climate$gpr,rank_group)
+combined_data<-cbind(climate,pt2)
+combined_data
+
+c<-ggplot(combined_data, aes(x=pt2,y=co2EPC,color=pt2))+geom_boxplot()+geom_jitter()+labs(title="Annual CO2 Emmission Rate per Capita vs Average Income",x="Average Income for each state",y="Annual CO2 Emission Rate (millions of metric tons)")
+
+combined_data[combined_data$pt2=="Bottom25",1]
+combined_data[combined_data$pt2=="Top25",1]
+
+ggplot()
+
+
+
+
+```
