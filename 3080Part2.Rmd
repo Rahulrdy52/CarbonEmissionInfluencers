@@ -1,0 +1,119 @@
+---
+title: "Project Part 2" 
+fontsize: 11.7pt
+geometry: margin=1in
+urlcolor: black
+output: pdf_document
+header-includes:
+- \usepackage{setspace}
+- \onehalfspacing
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, highlight=FALSE, warning=FALSE)
+```
+
+```{r, echo=FALSE, comment=NA}
+library(ggplot2)
+library(tidyverse)
+library(car)
+library(ggpubr)
+library(knitr)
+library(kableExtra)
+climate<-read.csv("/Users/rahulmreddy/Downloads/Rfiles/climatechange.csv")
+
+gpr<-NULL
+rank_group<-function(x){
+  if(x<26){gpr<-c(gpr,"Top25")}
+  else{gpr<-c(gpr,"Bottom25")}
+}
+
+pt2<-sapply(climate$gpr,rank_group)
+combined_data<-cbind(climate,pt2)
+
+
+
+a<-ggplot(combined_data, aes(x=pt2,y=co2EPC,color=pt2))+geom_boxplot()+geom_jitter()+labs(title="CO2 Emmission Rate/PerCapita vs State Ranking",x="Climate Change State Ranking",y="Annual CO2 Emission Rate/Per Capita")+labs(color="State")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+
+b<-ggplot(climate, aes(x=gpr,y=co2EPC))+geom_point()+geom_smooth(method=lm,color="red",alpha=0.2)+stat_cor(x.label=0,y.label=100)+labs(title="Correlation: CO2 Emmision Rate vs. State Ranking ",x="Climate Change State Ranking",y="Annual CO2 Emission Rate/PerCapita")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+
+climateless<-read.csv("/Users/rahulmreddy/Downloads/Rfiles/climateless.csv")
+c<-ggplot(climateless,aes(x=co2EPC))+geom_histogram()+labs(title="CO2 emission rates in Bottom 25 Ranked States",x="CO2 Emission Rates Per Capita")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+d<-ggplot(climateless,aes(sample=co2EPC))+stat_qq()+stat_qq_line()+labs(title="Corresponding qqplot for Bottom 25 States")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+
+
+climatemore<-read.csv("/Users/rahulmreddy/Downloads/Rfiles/climatemore.csv")
+e<-ggplot(climatemore,aes(x=co2EPC))+geom_histogram()+labs(title="CO2 emission rates in Top 25 Ranked states",x="CO2 Emission Rates Per Capita")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+f<-ggplot(climatemore,aes(sample=co2EPC))+stat_qq()+stat_qq_line()+labs(title="Corresponding qqplot for Top 25 States")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+
+
+
+```
+
+## Introduction
+
+In this report, I will dive deeper into a state's direct/indirect elements that affect its individual contribution to climate change (CO2 emission rates) in the U.S. I will address the following research question. Is there a significant difference in the CO2 emission rates per capita in states with more environmental policies and green tech adoption vs. states with fewer policies and less green tech adoption(How we can combat, 2019)? This is important to know as CO2 emissions are a significant factor in climate change, one of the most prevalent issues today, causing severe impacts on the planet and human societies. Global temperatures are rising, oceans are acidifying, biodiversity and agriculture are being negatively impacted, and frequent and extreme weather events are causing significant damage to infrastructure and homes(Climate Change, 2021). The data used to analyze annual rates of CO2 emission per capita in metric tons for each state in 2022 was acquired from the primary source, the U.S. Energy Information Administration.The dataset is a population and reflects the entire U.S. population.
+
+Regarding my environmental policies and increased green tech adoption variable, it is actually a climate change ranking of the states. Concerning carbon emissions, "1" represents the state ranking with the highest number of total environmentally clean (green) policies, green tech adoption, and recycling rates. "50" represents the state with the lowest number of the totaled three aspects mentioned above. The metrics created/collected for analyzing the state rankings were done by the website WiseVoter, which compiled their data from various primary sources, including the U.S. Census Bureau, Environmental Protection Agency, U.S. Department of Energy, and U.S. Geological Survey, to name a few. For this study, I will use this ranking of states in combination with the CO2 emission rate per capita statistics to focus on the issue of climate change in the United States. The data is adequate for this analysis and provides significant information for knowing where our country stands regarding climate change and if implementing any existing ideas can slow down the destruction of the environment. The states will be separated into two equally sized groups (the top 25 states with more environmental policies and green tech adoption/ bottom 25). This can then be analyzed to determine whether or not there is a statistical difference in the CO2 emission rates per capita between groups. The relevant exploratory data analysis for the relationship between the two variables can be found in the appendix below.
+
+
+## Methods/Analysis
+
+The distributions' sample size and normality must be considered to decide what test to use for the analysis of the effect of green policies on CO2 emission rates between the two samples (top 25/bottom 25 states). Both populations have a sample size of n=25, which is insufficient for the Central Limit Theorem to hold approximate normal distribution. The qqplots also tell us they are not normal. Thus, a non-parametric, quantitative test must be utilized for the non-normal distributions. A two-sample randomization test with bootstrapping works here (replacement sampling to construct simultaneous samples) to analyze our research question. For correct analysis, these three assumptions must be upheld. 1. The sample data must be representative of the population. Since the data consists of the 2022 annual CO2 emission rates in each state, the samples are representative of the U.S. population. The data for each state was also calculated per capita to account for differences in population sizes between states for fair analysis. 2. The sample data must be independent. In our case for each sample, the annual CO2 emission rate per capita in one state does not significantly effect the emission rate per capita in another state. 3. The distribution must not contain heavy tails. As shown in the graphs (histogram/qqplot) below, the distributions are not normal and seem to have no heavy tails. The null hypothesis of this study is that the mean CO2 emission rate per capita is the same in the top 25 and bottom 25 ranked states (by environmental policy and green tech adoption ranking ). The alternative hypothesis is that the mean CO2 emission rate per capita is different in the top 25 and bottom 25 ranked states (based on same climate change state ranking).
+
+```{r,echo=FALSE,out.width="75%", comment=NA}
+ggarrange(c,d,e,f+rremove("x.text"),ncol=2,nrow=2)
+```
+
+## Results 
+```{r,comment=NA}
+
+top25<-climatemore$co2EPC
+bottom25<-climateless$co2EPC
+top25_mean<- mean(top25)
+bottom25_mean<- mean(bottom25)
+samp_diff<-top25_mean-bottom25_mean
+bootstrap<-function(x){
+  crates<-sample(c(top25,bottom25))
+  climatemean1<-mean(crates[1:x])
+  climatemean2<-mean(crates[(x+1):(length(top25)+length(bottom25))])
+  climatemean1-climatemean2
+}
+boot_diffs_null<-replicate(10000,bootstrap(length(bottom25)))
+pval<-sum(boot_diffs_null<=samp_diff|boot_diffs_null>=
+2*mean(boot_diffs_null)-samp_diff)/10000
+pval
+
+```
+Our p-value of 0 above is less than our significance level from this two-sample randomization test. Therefore, the null hypothesis can be rejected, and there is sufficient evidence that the mean CO2 emissions rate per capita is different in the top 25 and bottom 25 ranked states based on their climate change ranking.
+
+
+## Conclusions
+
+To conclude, the validity of our assumptions should hold for this non-parametric test. The data reflects the population of the United States, and the state emission rates are independent of each other. It seems for the most part, there are no heavy tails for the samples, although two outliers skew the "bottom 25" graph a little more than expected. Because this is a non-parametric quantitative test, we definitely get less power than a test like the two-sample t-test (which has more assumptions), meaning the probability of finding the alternative, granted there was an effect to be found, is a little lower. But, after our analysis (rejected the null hypothesis), it's evident the total amount of environmental policies, green tech adoption, and rate of recycling affect CO2 emissions per capita for each state. This makes sense as a state that is more environmentally conscious and active should have different (better) CO2 emission rates than a state that isn't or has fewer environmental policies. We can generalize the results of this test beyond the data by acknowledging that states looking to implement environmentally-sound guidelines or policies can positively affect combating climate change, even in small amounts. Additionally, we can make another generalization that bigger states with higher overall CO2 emission rates can still have a lower emission rate per capita if the state goes more "green." A limitation of this analysis is that this is a non-directional (two-sided) two-sample test, so we cannot make huge generalizations regarding "greater or less than" assumptions on the data. Also, the test doesn't contextually take into account the structures of different state economies and their building standards, aspects that might affect each state's CO2 emission rate. For continuing on this research, I would try to test more descriptive variables like agricultural statistics and technological innovation stats on emission rates or compile emission rate data from states over multiple years for analysis. Gathering data from multiple years would especially help test significance of my research question as more data is involved in the individual samples. 
+
+\newpage
+## Appendix
+### Exploratory Data Analysis
+
+```{r, echo=FALSE,out.width="75%", message=FALSE, comment=NA}
+ggarrange(a,b+rremove("x.text"), labels=c("A", "B"), ncol=2,nrow=1.5)
+```
+
+
+\newpage
+## Works Cited
+ggplot help https://rpkgs.datanovia.com/ggpubr/
+
+1. Climate Change Impacts. (2021). National Oceanic and Atmospheric Administration.
+Retrieved March 31, 2023, from =https://www.noaa.gov/education/
+resource-collections/climate/climate-change-impacts
+
+2. Best & Worst States for Climate Change. (2022, June 20). WiseVoter. Retrieved March 31, 2023, from https://wisevoter.com/report/ best-worst-states-for-climate-change/
+    
+3. Energy-Related CO2 Emission Data Tables. (n.d.). U.S. Energy Information Administration. Retrieved March 31, 2023, from https://www.eia.gov/environment/emissions/state/
+
+4.  How we can combat Climate Change. (2019, January). The Washington Post.
+Retrieved March 31, 2023, from https://www.washingtonpost.com/news/opinions/wp/2019/01/02/feature/
+opinion-here-are-11-climate-change-policies-to-fight-for-in-2019/
+
