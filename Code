@@ -1,6 +1,8 @@
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message=FALSE, highlight=FALSE, comment=NA)
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, highlight=FALSE, warning=FALSE)
+```
 
+```{r, echo=FALSE, comment=NA}
 library(ggplot2)
 library(tidyverse)
 library(car)
@@ -8,17 +10,6 @@ library(ggpubr)
 library(knitr)
 library(kableExtra)
 climate<-read.csv("/Users/rahulmreddy/Downloads/Rfiles/climatechange.csv")
-climate
-
-income<-NULL
-income_group<-function(x){
-  if(x<60000){income<-c(income,"<60000$")}
-  else{income<-c(income,">60000$")}
-}
-
-Resilience<-sapply(climate$income,income_group)
-combined_data<-cbind(climate,Resilience)
-combined_data
 
 gpr<-NULL
 rank_group<-function(x){
@@ -28,14 +19,24 @@ rank_group<-function(x){
 
 pt2<-sapply(climate$gpr,rank_group)
 combined_data<-cbind(climate,pt2)
-combined_data
 
-c<-ggplot(combined_data, aes(x=pt2,y=co2EPC,color=pt2))+geom_boxplot()+geom_jitter()+labs(title="Annual CO2 Emmission Rate per Capita vs Average Income",x="Average Income for each state",y="Annual CO2 Emission Rate (millions of metric tons)")
 
-combined_data[combined_data$pt2=="Bottom25",1]
-combined_data[combined_data$pt2=="Top25",1]
+a<-ggplot(combined_data, aes(x=pt2,y=co2EPC,color=pt2))+geom_boxplot()+geom_jitter()+labs(title="CO2 Emmission Rate/PerCapita vs State Ranking",x="Climate Change State Ranking",y="Annual CO2 Emission Rate/Per Capita")+labs(color="State")+theme(plot.title=element_text(size=9),text=element_text(size=9))
 
-ggplot()
+b<-ggplot(climate, aes(x=gpr,y=co2EPC))+geom_point()+geom_smooth(method=lm,color="red",alpha=0.2)+stat_cor(x.label=0,y.label=100)+labs(title="Correlation: CO2 Emmision Rate vs. State Ranking ",x="Climate Change State Ranking",y="Annual CO2 Emission Rate/PerCapita")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+
+climateless<-read.csv("/Users/rahulmreddy/Downloads/Rfiles/climateless.csv")
+c<-ggplot(climateless,aes(x=co2EPC))+geom_histogram()+labs(title="CO2 emission rates in Bottom 25 Ranked States",x="CO2 Emission Rates Per Capita")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+d<-ggplot(climateless,aes(sample=co2EPC))+stat_qq()+stat_qq_line()+labs(title="Corresponding qqplot for Bottom 25 States")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+
+
+climatemore<-read.csv("/Users/rahulmreddy/Downloads/Rfiles/climatemore.csv")
+e<-ggplot(climatemore,aes(x=co2EPC))+geom_histogram()+labs(title="CO2 emission rates in Top 25 Ranked states",x="CO2 Emission Rates Per Capita")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+f<-ggplot(climatemore,aes(sample=co2EPC))+stat_qq()+stat_qq_line()+labs(title="Corresponding qqplot for Top 25 States")+theme(plot.title=element_text(size=9),text=element_text(size=9))
+
+
+
+```
 
 
 
